@@ -1,5 +1,4 @@
-from flask import Flask, render_template, redirect, request, session, url_for, flash
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask, render_template, redirect, session, url_for, flash
 from flask_wtf import FlaskForm
 from models import db, User, Feedback, connect_db
 from forms import RegistrationForm, LoginForm, FeedbackForm
@@ -20,6 +19,7 @@ with app.app_context():
 bcrypt = Bcrypt(app)
 
 def require_login(f):
+    """wrapper function to require login"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         
@@ -41,6 +41,7 @@ def home():
 
 @app.route('/register', methods=["GET", "POST"])
 def register():
+    """registering a user"""
     form = RegistrationForm()
     if form.validate_on_submit():
 
@@ -63,7 +64,8 @@ def register():
 
 @app.route('/users/<username>')
 @require_login
-def user_detail(username):    
+def user_detail(username):  
+    """details about a user"""  
     user = User.query.filter_by(username=username).first_or_404()
     feedbacks = Feedback.query.filter_by(username=username).all()
     return render_template('user_detail.html', user=user, feedbacks=feedbacks)
@@ -71,6 +73,7 @@ def user_detail(username):
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
+    """loggin in a user"""
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -84,12 +87,14 @@ def login():
 
 @app.route('/logout')
 def logout():
+    """logout a user"""
     session.pop('username', None)
     return redirect('/')
 
 @app.route('/users/<username>/delete', methods=["POST"])
 @require_login
 def delete_user(username):
+    """deleting a user"""
     user = User.query.filter_by(username=username).first_or_404()
     db.session.delete(user)
     db.session.commit()
@@ -99,6 +104,7 @@ def delete_user(username):
 @app.route('/users/<username>/feedback/add', methods=["GET", "POST"])
 @require_login
 def add_feedback(username):    
+    """add feedback to some user"""
     form = FeedbackForm()
     if form.validate_on_submit():
         new_feedback = Feedback(
@@ -114,6 +120,7 @@ def add_feedback(username):
 @app.route('/feedback/<int:feedback_id>/update', methods=["GET", "POST"])
 @require_login
 def update_feedback(feedback_id):
+    """update feedback"""
     feedback = Feedback.query.get_or_404(feedback_id)
     form = FeedbackForm(obj=feedback)
     if form.validate_on_submit():
@@ -126,6 +133,7 @@ def update_feedback(feedback_id):
 @app.route('/feedback/<int:feedback_id>/delete', methods=["POST"])
 @require_login
 def delete_feedback(feedback_id):
+    """delete feedback"""
     feedback = Feedback.query.get_or_404(feedback_id)
     db.session.delete(feedback)
     db.session.commit()
